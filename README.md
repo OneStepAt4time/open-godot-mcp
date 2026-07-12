@@ -74,7 +74,7 @@ The plugin starts a WebSocket server on port `6505` when the editor loads.
 
 ### 2. Get the Rust server
 
-Download the pre-built binary for your platform from the [v0.1.0 release](https://github.com/OneStepAt4time/open-godot-mcp/releases/tag/v0.1.0), or build it locally:
+Download the pre-built binary for your platform from the [v0.1.1 release](https://github.com/OneStepAt4time/open-godot-mcp/releases/tag/v0.1.1), or build it locally:
 
 ```bash
 cargo build --release
