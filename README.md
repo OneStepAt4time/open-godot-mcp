@@ -56,7 +56,7 @@ Version **0.1.2** — all core tool categories are implemented, fully integrated
 
 ## Available MCP Tools & Capabilities
 
-Open Godot MCP exposes **30 specialized tools** grouped by category to give AI assistants total engine control:
+Open Godot MCP exposes **84 specialized tools** grouped by category to give AI assistants total engine control:
 
 ### 📁 Project & Filesystem
 * `get_project_info`: Return metadata, Godot version, viewport size, and editor log path.
