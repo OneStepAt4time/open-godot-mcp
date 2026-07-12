@@ -1251,8 +1251,9 @@ func _undo() -> Dictionary:
 	ev.ctrl_pressed = true
 	ev.pressed = true
 	Input.parse_input_event(ev)
-	ev.pressed = false
-	Input.parse_input_event(ev)
+	var release := ev.duplicate()
+	release.pressed = false
+	Input.parse_input_event(release)
 	return {"ok": true}
 
 
@@ -1263,8 +1264,9 @@ func _redo() -> Dictionary:
 	ev.shift_pressed = true
 	ev.pressed = true
 	Input.parse_input_event(ev)
-	ev.pressed = false
-	Input.parse_input_event(ev)
+	var release := ev.duplicate()
+	release.pressed = false
+	Input.parse_input_event(release)
 	return {"ok": true}
 
 
