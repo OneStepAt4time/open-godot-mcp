@@ -1,8 +1,10 @@
-# Open Godot MCP
+# Open Godot MCP — AI Assistant for Godot Game Development
 
 A free, open-source, Rust-powered [Model Context Protocol](https://modelcontextprotocol.io/) server for **Godot Engine 4**.
 
-> Goal: give every AI assistant (Kimi, Claude, Cursor, etc.) the same kind of deep Godot Editor control that commercial solutions lock behind a paywall — but as a downloadable, self-hostable binary with a permissive license.
+> **Goal**: turn Kimi Code, Claude Code, Cursor, or any MCP-compatible assistant into a hands-on collaborator for building Godot games — giving it the same deep editor control that commercial solutions lock behind a paywall, but as a downloadable, self-hostable, MIT-licensed binary.
+
+With Open Godot MCP, an AI assistant can inspect scenes, create and edit nodes, write and attach GDScript, run the game, simulate input, query 3D cameras, and capture editor screenshots — all through a local WebSocket bridge.
 
 ## Architecture
 
@@ -27,6 +29,9 @@ AI assistant  ← stdio MCP →  open-godot-mcp-server (Rust)  ← WebSocket →
 ├── crates/mcp-server/      # Rust MCP server
 ├── godot_plugin/           # Godot addon (drop into your project)
 ├── test_project/           # Minimal Godot project used for integration tests
+├── docs/                   # AI assistant guides and examples
+│   ├── AI_ASSISTANT.md     # How to use the assistant with Kimi/Claude
+│   └── EXAMPLES.md         # Copy-pasteable MCP walkthroughs
 ├── PROTOCOL.md             # WebSocket protocol between server and plugin
 ├── PLAN.md                 # Development plan and roadmap
 └── .github/workflows/      # Release builds
@@ -48,6 +53,16 @@ Implemented MCP tools:
 - **3D & rendering**: `get_camera_3d_info`, `set_camera_3d_transform`, `get_environment_info`, `set_render_setting`
 - **UI / audio / animation / resources**: `list_animations`, `play_animation`, `list_audio_streams`, `play_audio_preview`, `list_resources`, `get_resource_info`
 - **Diagnostics**: `ping`
+
+## Example: build a player scene with AI
+
+A complete walkthrough that creates a playable `CharacterBody2D` player from scratch is available in [`docs/EXAMPLES.md`](docs/EXAMPLES.md). In a live Kimi / Claude session you can simply say:
+
+> "Create a new 2D scene `game.tscn`, add a `CharacterBody2D` Player with a Sprite and Collision child, write a `player.gd` script for movement, attach it, and save."
+
+The assistant will call the right sequence of MCP tools and the scene will appear inside Godot Editor in real time.
+
+For prompt ideas, setup tips, and safety notes, see [`docs/AI_ASSISTANT.md`](docs/AI_ASSISTANT.md).
 
 ## Quick start
 
@@ -105,6 +120,7 @@ printf '%s\n' \
 - [x] Input map tools
 - [x] 3D helpers (camera, environment, rendering settings)
 - [x] UI / audio / animation / resource tools
+- [x] AI assistant docs and examples
 - [ ] UndoRedo integration for all mutating scene operations
 - [ ] Material / shader / particle tools
 - [ ] Export helpers

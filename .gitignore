@@ -6,6 +6,7 @@
 .godot/
 *.import
 test_project/godot.log
+test_project/godot.pid
 
 # IDE
 .vscode/
