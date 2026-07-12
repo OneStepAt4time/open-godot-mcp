@@ -91,6 +91,7 @@ With the plugin active and the Rust server connected, an AI assistant can:
 - **Inspect before editing**: ask for `get_scene_tree` or `get_node_properties` before changing nodes.
 - **Use relative node paths**: paths like `Player/Sprite` are easier to reason about than full editor-internal paths.
 - **Validate scripts**: use `validate_script` before attaching new GDScript files.
+- **Reload the plugin when editing its code**: if you modify `command_router.gd` or other plugin files, call `reload_plugin` so Godot picks up the changes without restarting the editor.
 - **One change at a time**: complex refactors are safer when split into small, verifiable steps.
 
 ## Safety & limitations

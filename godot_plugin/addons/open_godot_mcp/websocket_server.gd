@@ -71,6 +71,9 @@ func _handle_message(peer: WebSocketPeer, text: String) -> void:
 	var request_id := req.get("request_id", "")
 	var method := req.get("method", "")
 	var params := req.get("params", null)
+	if method == "reload_plugin":
+		_send(peer, {"request_id": request_id, "result": _reload_plugin()})
+		return
 	var result := _router.handle(method, params)
 	_send(peer, {"request_id": request_id, "result": result})
 
@@ -78,3 +81,15 @@ func _handle_message(peer: WebSocketPeer, text: String) -> void:
 func _send(peer: WebSocketPeer, data: Dictionary) -> void:
 	var text := JSON.stringify(data)
 	peer.send_text(text)
+
+
+func _reload_plugin() -> Dictionary:
+	var plugin_cfg := "res://addons/open_godot_mcp/plugin.cfg"
+	# Schedule the actual reload after this response has been flushed.
+	call_deferred("_do_plugin_reload", plugin_cfg)
+	return {"ok": true, "reloaded": plugin_cfg, "note": "MCP server will reconnect automatically"}
+
+
+func _do_plugin_reload(plugin_cfg: String) -> void:
+	EditorInterface.set_plugin_enabled(plugin_cfg, false)
+	EditorInterface.set_plugin_enabled(plugin_cfg, true)

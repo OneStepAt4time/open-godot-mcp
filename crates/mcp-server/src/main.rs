@@ -6,7 +6,9 @@ use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::{mpsc, Mutex, oneshot};
 use tokio_tungstenite::tungstenite::Message;
@@ -70,6 +72,29 @@ type PendingMap = Arc<Mutex<HashMap<String, oneshot::Sender<Value>>>>;
 async fn main() -> Result<()> {
     let args = Args::parse();
 
+    loop {
+        match run_once(&args).await {
+            Ok(RunResult::StdinClosed) => break,
+            Ok(RunResult::Disconnected) => {
+                eprintln!("[open-godot-mcp] reconnecting in 2s...");
+                tokio::time::sleep(Duration::from_secs(2)).await;
+            }
+            Err(e) => {
+                eprintln!("[open-godot-mcp] error: {}", e);
+                tokio::time::sleep(Duration::from_secs(2)).await;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+enum RunResult {
+    StdinClosed,
+    Disconnected,
+}
+
+async fn run_once(args: &Args) -> Result<RunResult> {
     let url = format!("ws://127.0.0.1:{}/mcp", args.godot_port);
     eprintln!("[open-godot-mcp] connecting to Godot at {}", url);
 
@@ -78,11 +103,20 @@ async fn main() -> Result<()> {
         .with_context(|| format!("failed to connect to Godot plugin at {}", url))?;
     eprintln!("[open-godot-mcp] connected to Godot plugin");
 
+    // Notify the MCP client that the tool list is available (or may have changed
+    // after a reconnection). Some clients ignore this, but well-behaved ones will
+    // refresh their tool cache.
+    send_notification("notifications/tools/list_changed").await?;
+
     let (mut ws_tx, mut ws_rx) = ws_stream.split();
     let pending: PendingMap = Arc::new(Mutex::new(HashMap::new()));
 
     // Channel to send outgoing WebSocket messages from the stdio loop.
     let (out_tx, mut out_rx) = mpsc::unbounded_channel::<String>();
+
+    let disconnected = Arc::new(AtomicBool::new(false));
+    let disconnected_for_reader = disconnected.clone();
+    let disconnected_for_writer = disconnected.clone();
 
     // WebSocket reader task: route incoming Godot responses to pending stdio requests.
     let pending_for_reader = pending.clone();
@@ -100,6 +134,7 @@ async fn main() -> Result<()> {
                 }
             }
         }
+        disconnected_for_reader.store(true, Ordering::SeqCst);
         eprintln!("[open-godot-mcp] Godot WebSocket closed");
     });
 
@@ -110,6 +145,7 @@ async fn main() -> Result<()> {
                 break;
             }
         }
+        disconnected_for_writer.store(true, Ordering::SeqCst);
     });
 
     // Stdin reader loop.
@@ -145,9 +181,13 @@ async fn main() -> Result<()> {
 
         let response = handle_request(req, &pending, &out_tx).await;
         send_response(&mut stdout, response).await?;
+
+        if disconnected.load(Ordering::SeqCst) {
+            return Ok(RunResult::Disconnected);
+        }
     }
 
-    Ok(())
+    Ok(RunResult::StdinClosed)
 }
 
 async fn handle_request(
@@ -753,6 +793,11 @@ async fn handle_request(
                         }
                     },
                     {
+                        "name": "reload_plugin",
+                        "description": "Reload the Open Godot MCP plugin in the editor to pick up script changes.",
+                        "inputSchema": {"type": "object", "properties": {}}
+                    },
+                    {
                         "name": "ping",
                         "description": "Ping the Godot editor and return the current editor uptime in seconds.",
                         "inputSchema": {"type": "object", "properties": {}}
@@ -836,6 +881,18 @@ async fn handle_request(
             ..base
         },
     }
+}
+
+async fn send_notification(method: &str) -> Result<()> {
+    let mut stdout = tokio::io::stdout();
+    let line = serde_json::to_string(&json!({
+        "jsonrpc": "2.0",
+        "method": method,
+    }))?;
+    stdout.write_all(line.as_bytes()).await?;
+    stdout.write_all(b"\n").await?;
+    stdout.flush().await?;
+    Ok(())
 }
 
 async fn send_response(stdout: &mut tokio::io::Stdout, resp: JsonRpcResponse) -> Result<()> {

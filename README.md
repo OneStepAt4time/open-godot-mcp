@@ -97,6 +97,16 @@ Add to your `.mcp.json`:
 
 Open Godot Editor with the plugin enabled, then start a new AI session. The server will connect to Godot automatically on port `6505`.
 
+### 4. Reloading the plugin after code changes
+
+If you edit the plugin's GDScript files, Godot will not always pick up the changes while the editor is running. Use the MCP tool:
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"reload_plugin","arguments":{}}}
+```
+
+The plugin disables and re-enables itself, the Rust server detects the temporary disconnect and reconnects automatically, and the AI client receives a `notifications/tools/list_changed` notification so it can refresh its tool cache.
+
 ## Integration test
 
 A minimal test project lives in `test_project/`. To run the end-to-end smoke test manually:
