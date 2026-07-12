@@ -1,0 +1,13 @@
+; Engine Configuration File.
+; Godot version: 4.x
+
+[application]
+config/name="Open Godot MCP Test Project"
+config/features=PackedStringArray("4.2", "Forward Plus")
+config/icon="res://icon.svg"
+
+[editor_plugins]
+enabled=PackedStringArray("res://addons/open_godot_mcp/plugin.cfg")
+
+[rendering]
+renderer/rendering_method="forward_plus"

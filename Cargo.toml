@@ -1,0 +1,14 @@
+[workspace]
+members = ["crates/mcp-server"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Open Godot MCP Contributors"]
+license = "MIT"
+repository = "https://github.com/open-godot-mcp/godot-mcp-server"
+
+[profile.release]
+strip = true
+lto = true

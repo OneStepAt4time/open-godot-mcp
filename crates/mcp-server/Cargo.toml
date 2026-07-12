@@ -1,0 +1,23 @@
+[package]
+name = "open-godot-mcp-server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Open-source MCP server for Godot Editor — speaks stdio MCP on one side and WebSocket to the Godot plugin on the other."
+
+[[bin]]
+name = "open-godot-mcp-server"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+futures-util = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+url = "2"
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+uuid = { version = "1", features = ["v4"] }
