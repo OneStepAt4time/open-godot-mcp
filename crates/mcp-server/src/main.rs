@@ -605,8 +605,13 @@ async fn handle_request(
                     },
                     {
                         "name": "get_editor_screenshot",
-                        "description": "Capture a PNG screenshot of the active 2D/3D editor viewport and return it as base64.",
-                        "inputSchema": {"type": "object", "properties": {}}
+                        "description": "Capture a PNG screenshot of the 2D or 3D editor viewport and return it as base64.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "viewport": {"type": "string", "enum": ["2d", "3d"], "description": "Which editor viewport to capture (default: 3d)"}
+                            }
+                        }
                     },
                     {
                         "name": "play_scene",

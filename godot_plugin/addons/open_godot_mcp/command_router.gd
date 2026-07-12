@@ -713,10 +713,17 @@ func _execute_editor_script(params: Variant) -> Dictionary:
 	return {"ok": true, "path": script_path}
 
 
-func _get_editor_screenshot(_params: Variant) -> Dictionary:
-	var viewport := EditorInterface.get_editor_viewport_2d()
+func _get_editor_screenshot(params: Variant) -> Dictionary:
+	var p := _dict(params)
+	var viewport_type: String = p.get("viewport", "3d")
+	var viewport: SubViewport
+	if viewport_type == "2d":
+		viewport = EditorInterface.get_editor_viewport_2d()
+	else:
+		viewport = EditorInterface.get_editor_viewport_3d()
 	if viewport == null:
 		return {"error": "cannot access editor viewport"}
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	var texture := viewport.get_texture()
 	if texture == null:
 		return {"error": "cannot get viewport texture"}
@@ -730,7 +737,8 @@ func _get_editor_screenshot(_params: Variant) -> Dictionary:
 		"ok": true,
 		"format": "png",
 		"base64": Marshalls.raw_to_base64(png),
-		"size": {"x": image.get_width(), "y": image.get_height()}
+		"size": {"x": image.get_width(), "y": image.get_height()},
+		"viewport": viewport_type
 	}
 
 

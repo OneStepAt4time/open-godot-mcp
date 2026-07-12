@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://tlxqsiha5bgf"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g5ubp"]
+albedo_color = Color(0.3, 0.5, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hfkix"]
+size = Vector3(8, 0.2, 8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_metfq"]
+albedo_color = Color(0.9, 0.85, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6syyc"]
+size = Vector3(8, 3, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_o1325"]
+size = Vector3(8, 3, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_vy7fe"]
+size = Vector3(0.2, 3, 8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_10qhy"]
+size = Vector3(0.2, 3, 8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2y50f"]
+albedo_color = Color(0.6, 0.2, 0.1, 1)
+
+[sub_resource type="PrismMesh" id="PrismMesh_obbqb"]
+size = Vector3(9, 2.5, 9)
+
+[node name="House" type="Node3D" unique_id=964459487]
+
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=2060039011]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_g5ubp")
+mesh = SubResource("BoxMesh_hfkix")
+
+[node name="WallFront" type="MeshInstance3D" parent="." unique_id=1155558110]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -4)
+material_override = SubResource("StandardMaterial3D_metfq")
+mesh = SubResource("BoxMesh_6syyc")
+
+[node name="WallBack" type="MeshInstance3D" parent="." unique_id=1214906275]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 4)
+material_override = SubResource("StandardMaterial3D_metfq")
+mesh = SubResource("BoxMesh_o1325")
+
+[node name="WallLeft" type="MeshInstance3D" parent="." unique_id=739541537]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.5, 0)
+material_override = SubResource("StandardMaterial3D_metfq")
+mesh = SubResource("BoxMesh_vy7fe")
+
+[node name="WallRight" type="MeshInstance3D" parent="." unique_id=2129032591]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.5, 0)
+material_override = SubResource("StandardMaterial3D_metfq")
+mesh = SubResource("BoxMesh_10qhy")
+
+[node name="Roof" type="MeshInstance3D" parent="." unique_id=913253656]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
+material_override = SubResource("StandardMaterial3D_2y50f")
+mesh = SubResource("PrismMesh_obbqb")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=251983588]
+transform = Transform3D(0.70710677, -0.49999997, 0.49999997, 0, 0.70710677, 0.70710677, -0.70710677, -0.49999997, 0.49999997, 5, 10, 5)
+
+[node name="MainCamera" type="Camera3D" parent="." unique_id=503661895]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 8, 10)
