@@ -187,8 +187,8 @@ This lets the assistant react to errors and state changes as they happen, instea
 - [x] Material / shader / particle tools
 - [x] Export helpers
 - [x] Automated integration test harness
-- [ ] Plugin artifact packaging in CI
-- [ ] GitHub Release workflow with cross-platform binaries
+- [x] Plugin artifact packaging in CI
+- [x] GitHub Release workflow with cross-platform binaries
 - [ ] Asset import and resource pipeline helpers
 - [ ] MCP resources / prompts for Godot documentation
 - [ ] Editor refactoring tools (extract node, rename symbol across project)
