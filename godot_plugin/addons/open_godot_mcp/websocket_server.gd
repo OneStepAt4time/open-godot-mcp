@@ -30,6 +30,15 @@ func stop() -> void:
 	_peers.clear()
 
 
+# Broadcast an unsolicited event to every connected MCP peer.
+func broadcast_event(event: Dictionary) -> void:
+	if _peers.is_empty():
+		return
+	var text := JSON.stringify(event)
+	for peer in _peers.values():
+		peer.send_text(text)
+
+
 func _process(_delta: float) -> void:
 	if _tcp_server == null:
 		return

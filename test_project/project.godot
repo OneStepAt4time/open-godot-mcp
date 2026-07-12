@@ -17,6 +17,10 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="Open Godot MCP Test Project"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
+[debug]
+
+settings/logging/enable_file_logging=true
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/open_godot_mcp/plugin.cfg")

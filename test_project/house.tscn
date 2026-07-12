@@ -6,25 +6,34 @@ albedo_color = Color(0.3, 0.5, 0.2, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_hfkix"]
 size = Vector3(8, 0.2, 8)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_metfq"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hfkix"]
 albedo_color = Color(0.9, 0.85, 0.7, 1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_6syyc"]
+[sub_resource type="BoxMesh" id="BoxMesh_metfq"]
 size = Vector3(8, 3, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6syyc"]
+albedo_color = Color(0.9, 0.85, 0.7, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_o1325"]
 size = Vector3(8, 3, 0.2)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o1325"]
+albedo_color = Color(0.9, 0.85, 0.7, 1)
+
 [sub_resource type="BoxMesh" id="BoxMesh_vy7fe"]
 size = Vector3(0.2, 3, 8)
 
-[sub_resource type="BoxMesh" id="BoxMesh_10qhy"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_metfq"]
+albedo_color = Color(0.9, 0.85, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6syyc"]
 size = Vector3(0.2, 3, 8)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2y50f"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vy7fe"]
 albedo_color = Color(0.6, 0.2, 0.1, 1)
 
-[sub_resource type="PrismMesh" id="PrismMesh_obbqb"]
+[sub_resource type="PrismMesh" id="PrismMesh_10qhy"]
 size = Vector3(9, 2.5, 9)
 
 [node name="House" type="Node3D" unique_id=964459487]
@@ -36,31 +45,31 @@ mesh = SubResource("BoxMesh_hfkix")
 
 [node name="WallFront" type="MeshInstance3D" parent="." unique_id=1155558110]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -4)
-material_override = SubResource("StandardMaterial3D_metfq")
-mesh = SubResource("BoxMesh_6syyc")
+material_override = SubResource("StandardMaterial3D_hfkix")
+mesh = SubResource("BoxMesh_metfq")
 
 [node name="WallBack" type="MeshInstance3D" parent="." unique_id=1214906275]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 4)
-material_override = SubResource("StandardMaterial3D_metfq")
+material_override = SubResource("StandardMaterial3D_6syyc")
 mesh = SubResource("BoxMesh_o1325")
 
 [node name="WallLeft" type="MeshInstance3D" parent="." unique_id=739541537]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.5, 0)
-material_override = SubResource("StandardMaterial3D_metfq")
+material_override = SubResource("StandardMaterial3D_o1325")
 mesh = SubResource("BoxMesh_vy7fe")
 
 [node name="WallRight" type="MeshInstance3D" parent="." unique_id=2129032591]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.5, 0)
 material_override = SubResource("StandardMaterial3D_metfq")
-mesh = SubResource("BoxMesh_10qhy")
+mesh = SubResource("BoxMesh_6syyc")
 
 [node name="Roof" type="MeshInstance3D" parent="." unique_id=913253656]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
-material_override = SubResource("StandardMaterial3D_2y50f")
-mesh = SubResource("PrismMesh_obbqb")
+material_override = SubResource("StandardMaterial3D_vy7fe")
+mesh = SubResource("PrismMesh_10qhy")
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=251983588]
-transform = Transform3D(0.70710677, -0.49999997, 0.49999997, 0, 0.70710677, 0.70710677, -0.70710677, -0.49999997, 0.49999997, 5, 10, 5)
+transform = Transform3D(0.7073882, -0.49960187, 0.49999982, 0, 0.7073882, 0.7068252, -0.7068252, -0.49999982, 0.5003981, 5, 10, 5)
 
 [node name="MainCamera" type="Camera3D" parent="." unique_id=503661895]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 8, 10)
+transform = Transform3D(0.7073882, -0.3432038, 0.6179102, 0, 0.8742051, 0.48555684, -0.7068252, -0.3434772, 0.6184024, 10, 8, 10)

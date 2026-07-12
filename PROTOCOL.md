@@ -63,7 +63,50 @@ Return project metadata.
   "godot_version": { ... },
   "renderer": "forward_plus",
   "viewport_width": 1920,
-  "viewport_height": 1080
+  "viewport_height": 1080,
+  "log_path": "C:/.../godot.log"
+}
+```
+
+`log_path` is the best-effort absolute path to the editor log file. The Rust server uses it to tail errors and output lines and forward them as MCP `notifications/message`.
+
+## Events (Godot → server → MCP client)
+
+The plugin can also push **unsolicited events** to every connected WebSocket peer. The Rust server forwards them to the MCP client as server-to-client notifications.
+
+### Event message
+
+```json
+{
+  "event": "scene_changed",
+  "payload": {
+    "path": "res://house.tscn",
+    "name": "House"
+  }
+}
+```
+
+Supported events:
+
+| Event | Payload | MCP notification |
+|-------|---------|------------------|
+| `scene_changed` | `{path, name}` | `notifications/godot/event` |
+| `play_state_changed` | `{playing}` | `notifications/godot/event` |
+| `selection_changed` | `{selected_paths}` | `notifications/godot/event` |
+
+### Log/error lines
+
+Log tailing is performed by the Rust server rather than the plugin, because the editor log file is usually locked for writing by Godot itself and cannot be reopened from inside the editor process. After connecting, the server reads `log_path` from `get_project_info` and tails that file, forwarding each new line as:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "notifications/message",
+  "params": {
+    "level": "error",
+    "data": "SCRIPT ERROR: ...",
+    "source": "C:/.../godot.log"
+  }
 }
 ```
 

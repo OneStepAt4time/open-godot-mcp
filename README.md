@@ -6,6 +6,8 @@ A free, open-source, Rust-powered [Model Context Protocol](https://modelcontextp
 
 With Open Godot MCP, an AI assistant can inspect scenes, create and edit nodes, write and attach GDScript, run the game, simulate input, query 3D cameras, and capture editor screenshots — all through a local WebSocket bridge.
 
+The assistant also receives **proactive events** from Godot: editor errors, log output, scene changes, and play/stop state changes are pushed to the MCP client as notifications, so the AI notices problems without being asked.
+
 ## Architecture
 
 ```
@@ -39,20 +41,28 @@ AI assistant  ← stdio MCP →  open-godot-mcp-server (Rust)  ← WebSocket →
 
 ## Current status
 
-Version **0.1.0** — all core tool categories are implemented and manually tested end-to-end against Godot 4.7.
+Version **0.1.2** — all core tool categories are implemented, fully integrated with Godot's undo history, proactive event hooks, and thoroughly tested end-to-end against Godot 4.
 
 Implemented MCP tools:
 
 - **Project & filesystem**: `get_project_info`, `get_project_settings`, `set_project_setting`, `get_filesystem_tree`, `search_files`
 - **Scene tree**: `get_scene_tree`, `get_open_scenes`, `open_scene`, `save_scene`, `create_scene`, `add_scene_instance`
-- **Node CRUD**: `add_node`, `delete_node`, `duplicate_node`, `move_node`, `rename_node`, `update_property`, `get_node_properties`, `get_editor_selection`, `select_nodes`, `find_nodes_by_type`, `connect_signal`, `disconnect_signal`, `get_node_groups`, `set_node_groups`
+- **Node CRUD**: `add_node`, `delete_node`, `duplicate_node`, `move_node`, `rename_node`, `update_property`, `get_node_properties`, `get_editor_selection`, `select_nodes`, `find_nodes_by_type`, `connect_signal`, `disconnect_signal`, `get_node_groups`, `set_node_groups`, `scatter_prefabs` (randomized layout scattering)
+- **Undo / Redo**: `undo`, `redo` (mutations are fully undoable within the editor history)
 - **Scripts**: `list_scripts`, `read_script`, `create_script`, `edit_script`, `attach_script`, `validate_script`, `get_open_scripts`, `search_in_files`
+- **UI & Theme Layout**: `set_control_anchors`, `set_theme_override`, `modify_stylebox` (flat and themed StyleBox modifications)
+- **TileMaps & Grid Design**: `set_tilemap_cell`, `get_tilemap_cells`, `list_tilemap_layers` (supports both `TileMap` and `TileMapLayer` nodes)
+- **AnimationTree & Locomotion**: `configure_animation_tree`, `set_animation_tree_parameter`, `create_animation_state_transition` (custom state machines)
+- **Shaders, Materials & VFX**: `set_material_shader`, `set_shader_parameter`, `configure_particle_system` (CPU/GPU particle material smarth-routing)
+- **Spatial Queries & Physics**: `perform_raycast_query_3d`, `get_overlapping_bodies`, `generate_collision_from_mesh` (concave/convex mesh collision generation), `bake_navigation` (NavMesh/NavPoly baking)
+- **Audio Mixer & Mixer**: `create_audio_bus`, `set_audio_bus_effect`, `set_audio_bus_volume`
+- **Headless Build & Export**: `list_export_presets`, `run_project_export`
 - **Editor inspection**: `get_editor_errors`, `get_output_log`, `execute_editor_script`, `get_editor_screenshot`
 - **Runtime control**: `play_scene`, `stop_scene`, `get_game_screenshot`, `simulate_key`, `simulate_mouse_click`
 - **Input map**: `list_input_actions`, `add_input_action`, `remove_input_action`, `set_input_key`, `get_input_map`
 - **3D & rendering**: `get_camera_3d_info`, `set_camera_3d_transform`, `get_environment_info`, `set_render_setting`
-- **UI / audio / animation / resources**: `list_animations`, `play_animation`, `list_audio_streams`, `play_audio_preview`, `list_resources`, `get_resource_info`
-- **Diagnostics**: `ping`
+- **Audio & Animations**: `list_animations`, `play_animation`, `list_audio_streams`, `play_audio_preview`, `list_resources`, `get_resource_info`
+- **Diagnostics**: `ping`, `get_performance_diagnostics` (engine stats, FPS, memory, draw calls)
 
 ## Example: build a player scene with AI
 
@@ -74,28 +84,58 @@ The plugin starts a WebSocket server on port `6505` when the editor loads.
 
 ### 2. Get the Rust server
 
-Download the pre-built binary for your platform from the [v0.1.1 release](https://github.com/OneStepAt4time/open-godot-mcp/releases/tag/v0.1.1), or build it locally:
+Download the pre-built binary for your platform from the [v0.1.2 release](https://github.com/OneStepAt4time/open-godot-mcp/releases/tag/v0.1.2), or build it locally:
 
 ```bash
 cargo build --release
 # binary: target/release/open-godot-mcp-server
 ```
 
-### 3. Configure your AI assistant
+### 3. Configure your AI client / editor
 
-Add to your `.mcp.json`:
+Here is how to configure the server for different popular tools:
+
+#### A. Claude Desktop / Claude Code / Kimi Code
+
+Create or edit your configuration file:
+* **Windows (Claude Desktop)**: `%APPDATA%\Claude\claude_desktop_config.json`
+* **macOS (Claude Desktop)**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+* **Claude Code / general**: `.mcp.json` in your project or home folder.
+
+Add the following to the `mcpServers` object:
 
 ```json
 {
   "mcpServers": {
     "open-godot-mcp": {
-      "command": "/path/to/open-godot-mcp-server"
+      "command": "C:/path/to/open-godot-mcp-server.exe",
+      "args": []
     }
   }
 }
 ```
 
-Open Godot Editor with the plugin enabled, then start a new AI session. The server will connect to Godot automatically on port `6505`.
+*(Note: On Windows, use forward slashes `/` in the file path to avoid escape character errors).*
+
+#### B. Cursor Editor
+
+1. Open Cursor and go to **Settings → Features → MCP**.
+2. Click **+ Add New MCP Server**.
+3. Fill out the dialog:
+   * **Name**: `open-godot-mcp`
+   * **Type**: `command`
+   * **Command**: `C:/path/to/open-godot-mcp-server.exe` (use absolute path)
+4. Click **Save**.
+
+#### C. Command Line Arguments (Optional)
+
+The server supports the following CLI options:
+* `--godot-port <PORT>`: The port the Godot Editor plugin WebSocket is running on (default: `6505`).
+* `--log-file <PATH>`: Explicitly provide the absolute path to the Godot log file to tail, rather than auto-discovering it.
+
+---
+
+Open your Godot project with the plugin enabled, then start your AI assistant session. The server connects to the editor automatically, giving the AI full control!
 
 ### 4. Reloading the plugin after code changes
 
@@ -120,6 +160,16 @@ printf '%s\n' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_project_info"}}' \
 | ../target/release/open-godot-mcp-server
 ```
+
+## Proactive events
+
+When the Godot plugin is enabled, it continuously monitors the editor and pushes events to the MCP client:
+
+- **Scene changes** are reported as `notifications/godot/event` with the new scene path.
+- **Play/stop** toggles are reported as `notifications/godot/event` with the current playing state.
+- **Log/error lines** are tailed by the Rust server from the editor log file and forwarded as `notifications/message` with level `info`, `warning`, or `error`.
+
+This lets the assistant react to errors and state changes as they happen, instead of relying on the user to notice and report them. Scene/play events require only the plugin. Log tailing works automatically when the editor log file is readable by the server process (e.g. when Godot is launched with its stdout/stderr redirected to a log file).
 
 ## Roadmap
 

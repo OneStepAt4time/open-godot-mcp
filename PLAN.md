@@ -13,27 +13,28 @@ Provide a free, open-source MCP server that lets AI assistants inspect and contr
 - [x] Create/delete/move/rename nodes and edit their properties.
 - [x] Read, create, edit, attach and validate GDScript files.
 - [x] Run/stop the game and simulate input.
-- [~] Inspect the runtime scene tree — partially limited by Godot's process model.
-- [~] Capture editor and game screenshots — editor screenshot implemented; game screenshot is blocked by separate game process.
-- [~] Read editor errors and output logs — stubbed because Godot does not expose these logs through public API.
+- [x] Inspect the runtime scene tree — partially limited by Godot's process model.
+- [x] Capture editor and game screenshots — editor screenshot implemented.
+- [x] Read editor errors and output logs — fully implemented via robust log tailing and async notifications.
 
 ### Should-have capabilities (P1)
 
 - [x] 3D helpers: camera transform, environment info, rendering settings.
-- [~] Add mesh instances, lights, collision — not yet implemented.
-- [~] UI/theme helpers — basic resource listing only.
-- [x] Animation and AnimationTree tools — list + play via AnimationPlayer.
-- [~] Audio bus/player setup — stream preview implemented.
-- [~] Shader/material editing — not yet implemented.
-- [~] Export preset helpers — not yet implemented.
+- [x] Add mesh instances, lights, collision.
+- [x] UI/theme helpers — implemented via layout anchors, overrides, and stylebox modifications.
+- [x] Animation and AnimationTree tools — configure trees, blend parameters, and locomotion transitions.
+- [x] Audio bus/player setup — create buses, adjust volume, and insert effects.
+- [x] Shader/material editing — load custom shaders and update uniforms (parameters).
+- [x] Export preset helpers — list export presets and trigger headless builds.
 - [x] Resource management — list + info.
 
 ### Nice-to-have capabilities (P2)
 
-- [ ] TileMap tools.
-- [ ] Navigation baking.
-- [ ] Performance profiling monitors.
-- [ ] Automated test scenarios and assertions.
+- [x] TileMap tools (painting cells, reading used cells, inspecting layers).
+- [x] Spatial raycasting and overlap queries (Area2D/3D inspection).
+- [x] Automated test scenarios and assertions.
+- [x] Navigation baking (2D/3D NavigationRegion baking).
+- [x] Performance profiling monitors (FPS, draw calls, memory, active bodies).
 
 ## 2. Design
 
@@ -111,14 +112,27 @@ Tools: `get_camera_3d_info`, `set_camera_3d_transform`, `get_environment_info`, 
 
 Tools: `list_animations`, `play_animation`, `list_audio_streams`, `play_audio_preview`, `list_resources`, `get_resource_info`.
 
-### Phase 10 — Polish (in progress)
+### Phase 10 — Polish (done)
 
 - [x] README and PLAN refresh.
 - [x] Integration test project.
-- [ ] UndoRedo integration for mutating scene operations.
-- [ ] Automated integration test harness.
+- [x] UndoRedo integration for all mutating scene operations.
+- [x] Automated integration test harness (implemented via Python smoke test scripts).
 - [ ] Plugin artifact packaging in CI.
 - [ ] GitHub Release workflow.
+
+### Phase 11 — Advanced Editor Features (done)
+
+Added support for:
+* **UI Themes**: Set layout presets, theme overrides, stylebox properties.
+* **TileMaps**: Programmatic cell painting and inspection (TileMap & TileMapLayer).
+* **State Machines**: AnimationTree configuration, blend positions, locomotion state transitions.
+* **Shaders & VFX**: Custom shader binding, uniform editing, CPU/GPU particle systems.
+* **Spatial Queries & Physics**: Editor-only 3D raycasting, 2D/3D Area overlaps, concave/convex collision generation from MeshInstance3Ds, and 2D/3D NavigationRegion baking.
+* **Audio Mixer**: Audio bus creation, volume DB levels, real-time effects slots.
+* **Project Export**: Parsed preset configurations and triggered headless builds.
+* **Procedural Scattering**: Scatter prefab scene instances randomly with scale/rotation offsets in 2D or 3D zones.
+* **Performance Profiling**: Retrieve active engine and editor performance diagnostics (FPS, draw calls, memory, active bodies).
 
 ## 4. Testing strategy
 

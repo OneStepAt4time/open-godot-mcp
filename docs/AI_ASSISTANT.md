@@ -8,11 +8,17 @@ Instead of just reading code, the assistant can inspect the running Godot Editor
 
 With the plugin active and the Rust server connected, an AI assistant can:
 
-- **Inspect the project**: read project settings, list files, search scripts.
-- **Navigate the scene tree**: see nodes, properties, and relationships in real time.
-- **Edit scenes**: add, delete, move, rename, and reparent nodes; update properties including `Vector2`, `Vector3`, and `Color`.
+- **Edit scenes with Undo/Redo**: add, delete, move, rename, and reparent nodes; update properties (fully undoable); scatter prefab scene instances randomly in 2D/3D zones.
+- **UI & Theme Layouts**: customize Control layout anchors, configure theme overrides, and edit flat/themed StyleBox configurations.
+- **Paint TileMaps**: paint, clear, and read grid cell positions on both `TileMap` and `TileMapLayer` nodes.
+- **Setup AnimTrees**: link AnimationTrees to players, update parameters, and connect states with transition blend conditions.
 - **Write GDScript**: create, read, edit, validate, and attach scripts.
+- **Shaders & VFX**: connect shaders, edit parameters/uniforms, and configure CPU/GPU particle systems (smart-routing node and material properties).
+- **Physics & Navigation Queries**: run 3D raycasts, check Area2D/3D overlaps, generate concave (trimesh) or convex collision shapes from MeshInstance3D nodes, and bake 2D/3D navigation regions.
+- **Audio Bus Mixers**: create channels, set volume levels, and insert bus effects.
+- **Project Exporting**: list presets and compile release/debug packages headless.
 - **Run the game**: play/stop scenes and simulate keyboard/mouse input.
+- **Diagnostics & Profiling**: ping and retrieve active editor/engine performance diagnostics (FPS, static memory, draw calls, active physics bodies, process time).
 - **Inspect 3D setups**: query cameras, environment, and rendering settings.
 - **Manage input**: list and configure input actions and key bindings.
 - **Capture the editor**: take PNG screenshots of the active viewport.
@@ -97,9 +103,9 @@ With the plugin active and the Rust server connected, an AI assistant can:
 ## Safety & limitations
 
 - The assistant operates inside your local Godot Editor. It cannot access the internet or modify files outside the project.
-- Mutating scene operations currently do **not** go through Godot's `UndoRedoManager`. Save/commit your project before heavy AI-assisted editing.
+- **Full Undo/Redo**: All mutating scene operations (adding, deleting, duplicating, moving, renaming, updating properties, and changing signals/groups/scripts) go through Godot's `EditorUndoRedoManager`. You can safely undo (`Ctrl+Z`) or redo (`Ctrl+Y`) any modifications made by the AI directly inside the editor.
+- **Active Log Interception**: Editor warnings and errors are actively monitored by the server and broadcasted as asynchronous MCP notifications (`notifications/message`), making script error debugging highly automated.
 - `get_game_screenshot` and full runtime scene inspection are limited because the running game is usually a separate process.
-- Editor error/output logs are not exposed by Godot's public API, so the assistant cannot read them directly.
 
 ## Next steps
 
