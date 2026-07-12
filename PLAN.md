@@ -118,8 +118,8 @@ Tools: `list_animations`, `play_animation`, `list_audio_streams`, `play_audio_pr
 - [x] Integration test project.
 - [x] UndoRedo integration for all mutating scene operations.
 - [x] Automated integration test harness (implemented via Python smoke test scripts).
-- [ ] Plugin artifact packaging in CI.
-- [ ] GitHub Release workflow.
+- [x] Plugin artifact packaging in CI.
+- [x] GitHub Release workflow.
 
 ### Phase 11 — Advanced Editor Features (done)
 
