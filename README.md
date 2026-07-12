@@ -20,12 +20,20 @@ AI assistant  ← stdio MCP →  open-godot-mcp-server (Rust)  ← WebSocket →
 - **Rust server**: single static binary, cross-platform, speaks MCP over stdio.
 - **Godot plugin**: runs inside the editor, exposes the scene tree, project settings, scripts, runtime inspection, input simulation, etc. through a WebSocket API.
 
-## Why Rust?
+## Why Open Godot MCP? (Key Advantages vs. Competitors)
 
-- **Single binary**: no Node.js runtime to install, no `npm install`, no dependency hell.
-- **Small & fast**: release binaries are ~few MB and start instantly.
-- **Cross-platform**: Windows, Linux, macOS from one codebase.
-- **Distributable**: GitHub Actions can build signed releases automatically.
+Unlike basic node-manipulation bridges or commercial plugins, **Open Godot MCP** is designed specifically to give AI assistants a professional developer's workspace. Here is why it stands out:
+
+1. **100% Free & MIT Licensed**: No subscriptions, no telemetry, no seats, and no paywalls. It runs entirely locally on your machine.
+2. **First-Class Undo/Redo Integration**: All mutating scene operations (adding, deleting, moving, renaming, updating properties, and changing signals/groups/scripts) are registered inside Godot's `EditorUndoRedoManager`. If the AI makes a mistake, you can revert it instantly with `Ctrl+Z` in the editor.
+3. **Proactive Event Hooking (Self-Healing)**: It does not just wait for instructions. The server tails editor logs and connects to signals (`selection_changed`, `scene_changed`, `play_state_changed`) to push warning/error lines and selection updates to the AI. If the AI writes a script with compile warnings, it gets notified instantly and can auto-heal the code.
+4. **Smart Design Helpers**: We build high-level abstract tools instead of forcing the AI to execute dozens of low-level commands:
+   - **Procedural Scattering**: Scatter prefab scenes randomly with scale and rotation offsets in 2D or 3D zones in one step.
+   - **Mesh-to-Collision**: Create concave/convex collision shapes for 3D meshes natively in the editor.
+   - **UI Themes**: Set layout presets, theme overrides, and edit flat/nested StyleBoxes.
+   - **Navigation & Audio**: Bake NavMeshes/NavPolygons and mix audio buses with ClassDB effects directly.
+5. **In-Editor Physics Queries**: Execute 3D raycasting and 2D/3D Area overlaps inside the editor physics space without needing to launch a playtest.
+6. **No Runtime Dependencies (Powered by Rust)**: Distributed as a single compiled binary (only few MBs). No Node.js runtime to install, no `npm install` dependency hell, and no giant `node_modules` bloating your project.
 
 ## Project layout
 
@@ -46,26 +54,84 @@ AI assistant  ← stdio MCP →  open-godot-mcp-server (Rust)  ← WebSocket →
 
 Version **0.1.2** — all core tool categories are implemented, fully integrated with Godot's undo history, proactive event hooks, and thoroughly tested end-to-end against Godot 4.
 
-Implemented MCP tools:
+## Available MCP Tools & Capabilities
 
-- **Project & filesystem**: `get_project_info`, `get_project_settings`, `set_project_setting`, `get_filesystem_tree`, `search_files`
-- **Scene tree**: `get_scene_tree`, `get_open_scenes`, `open_scene`, `save_scene`, `create_scene`, `add_scene_instance`
-- **Node CRUD**: `add_node`, `delete_node`, `duplicate_node`, `move_node`, `rename_node`, `update_property`, `get_node_properties`, `get_editor_selection`, `select_nodes`, `find_nodes_by_type`, `connect_signal`, `disconnect_signal`, `get_node_groups`, `set_node_groups`, `scatter_prefabs` (randomized layout scattering)
-- **Undo / Redo**: `undo`, `redo` (mutations are fully undoable within the editor history)
-- **Scripts**: `list_scripts`, `read_script`, `create_script`, `edit_script`, `attach_script`, `validate_script`, `get_open_scripts`, `search_in_files`
-- **UI & Theme Layout**: `set_control_anchors`, `set_theme_override`, `modify_stylebox` (flat and themed StyleBox modifications)
-- **TileMaps & Grid Design**: `set_tilemap_cell`, `get_tilemap_cells`, `list_tilemap_layers` (supports both `TileMap` and `TileMapLayer` nodes)
-- **AnimationTree & Locomotion**: `configure_animation_tree`, `set_animation_tree_parameter`, `create_animation_state_transition` (custom state machines)
-- **Shaders, Materials & VFX**: `set_material_shader`, `set_shader_parameter`, `configure_particle_system` (CPU/GPU particle material smarth-routing)
-- **Spatial Queries & Physics**: `perform_raycast_query_3d`, `get_overlapping_bodies`, `generate_collision_from_mesh` (concave/convex mesh collision generation), `bake_navigation` (NavMesh/NavPoly baking)
-- **Audio Mixer & Mixer**: `create_audio_bus`, `set_audio_bus_effect`, `set_audio_bus_volume`
-- **Headless Build & Export**: `list_export_presets`, `run_project_export`
-- **Editor inspection**: `get_editor_errors`, `get_output_log`, `execute_editor_script`, `get_editor_screenshot`
-- **Runtime control**: `play_scene`, `stop_scene`, `get_game_screenshot`, `simulate_key`, `simulate_mouse_click`
-- **Input map**: `list_input_actions`, `add_input_action`, `remove_input_action`, `set_input_key`, `get_input_map`
-- **3D & rendering**: `get_camera_3d_info`, `set_camera_3d_transform`, `get_environment_info`, `set_render_setting`
-- **Audio & Animations**: `list_animations`, `play_animation`, `list_audio_streams`, `play_audio_preview`, `list_resources`, `get_resource_info`
-- **Diagnostics**: `ping`, `get_performance_diagnostics` (engine stats, FPS, memory, draw calls)
+Open Godot MCP exposes **30 specialized tools** grouped by category to give AI assistants total engine control:
+
+### 📁 Project & Filesystem
+* `get_project_info`: Return metadata, Godot version, viewport size, and editor log path.
+* `get_project_settings`: Read current `project.godot` settings.
+* `set_project_setting`: Update and save project configuration.
+* `get_filesystem_tree`: Retrieve directory structure recursively.
+* `search_files`: Find files using glob/pattern match.
+
+### 🌿 Scene Tree & Node CRUD
+* `get_scene_tree`: Get structural JSON of the active scene tree.
+* `get_open_scenes`: List currently open tabs.
+* `open_scene`: Switch active tab to a specific scene.
+* `save_scene`: Save the active scene on disk.
+* `create_scene`: Create a new scene with custom root type.
+* `add_scene_instance`: Instantiate a sub-scene.
+* `add_node` / `delete_node`: Manage node life cycle.
+* `duplicate_node` / `move_node` / `rename_node`: Reorganize scene structures.
+* `update_property` / `get_node_properties`: Read and write node properties (handles `Vector2/3`, `Color`, etc.).
+* `select_nodes` / `get_editor_selection`: Get/set selected nodes in the editor hierarchy.
+* `find_nodes_by_type`: Query nodes by class type.
+* `connect_signal` / `disconnect_signal`: Bind scene events to GDScript methods.
+* `get_node_groups` / `set_node_groups`: Categorize nodes using groups.
+* `scatter_prefabs`: Scatter prefab scene instances randomly with scale/rotation offsets in 2D or 3D zones in one step.
+
+### ↩️ History Control (Undo/Redo)
+* `undo` / `redo`: Undo or redo editor actions (including AI changes) directly inside the Godot history stack.
+
+### 📝 GDScript Integration
+* `list_scripts` / `get_open_scripts`: Inspect script files.
+* `read_script` / `create_script` / `edit_script`: Full script CRUD.
+* `attach_script`: Link a script to a node.
+* `validate_script`: Dry-run compile check for syntax errors.
+* `search_in_files`: Grep across script contents.
+
+### 🎨 UI & Theme Layouts
+* `set_control_anchors`: Configure responsive anchoring (Full Rect, Center, etc.) for Control nodes.
+* `set_theme_override`: Add color, font, size overrides to Control nodes.
+* `modify_stylebox`: Edit border radii, border widths, background colors on flat/nested StyleBoxes.
+
+### 🧱 TileMaps & Grid Design
+* `set_tilemap_cell`: Paint or clear grid cells (supports both `TileMap` and `TileMapLayer` nodes).
+* `get_tilemap_cells`: Read the coordinates of painted grid cells.
+* `list_tilemap_layers`: List grid layers and their names/visibilities.
+
+### 🏃 AnimationTree & Locomotion
+* `configure_animation_tree`: Connect an `AnimationTree` to an `AnimationPlayer` and activate it.
+* `set_animation_tree_parameter`: Update blend positions, states, or parameter conditions.
+* `create_animation_state_transition`: Connect animation states inside an `AnimationNodeStateMachine` with crossfades.
+
+### 🔮 Shaders, Materials & VFX
+* `set_material_shader`: Link a custom shader `.gdshader` to a `ShaderMaterial`.
+* `set_shader_parameter`: Calibrate uniform parameters in real time.
+* `configure_particle_system`: Configure properties on GPU/CPU particle systems (routes node vs material parameters automatically).
+
+### 📐 Spatial Queries & Physics
+* `perform_raycast_query_3d`: Run 3D raycast queries in the editor physics space (returns hit position, normal, collider path).
+* `get_overlapping_bodies`: Query Area2D/3D overlapping bodies inside the editor physics state.
+* `generate_collision_from_mesh`: Create trimesh (concave) or convex collision shapes from MeshInstance3D nodes.
+* `bake_navigation`: Bake NavMesh or NavPolygon synchronously.
+
+### 🔊 Audio Mixer
+* `create_audio_bus`: Create new audio buses.
+* `set_audio_bus_effect`: Attach ClassDB effects (Reverb, Delay, etc.) to mixer slots.
+* `set_audio_bus_volume`: Set bus DB volume levels.
+
+### 🚀 Headless Build & Export
+* `list_export_presets`: List build presets.
+* `run_project_export`: Trigger headless release/debug builds.
+
+### 🎮 Runtime Control & Diagnostics
+* `play_scene` / `stop_scene`: Playtest active scenes.
+* `simulate_key` / `simulate_mouse_click`: Send keyboard/mouse inputs for automated playtesting.
+* `get_editor_screenshot`: Capture active editor viewport as a PNG.
+* `get_performance_diagnostics`: Query engine stats (FPS, memory, draw calls, active bodies).
+* `ping`: Server status check.
 
 ## Example: build a player scene with AI
 
