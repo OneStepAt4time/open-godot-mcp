@@ -1,5 +1,8 @@
 # Open Godot MCP — AI Assistant for Godot Game Development
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/OneStepAt4time?color=ea4aaa&style=flat-square)](https://github.com/sponsors/OneStepAt4time)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-yellow?style=flat-square&logo=buy-me-a-coffee)](https://www.buymeacoffee.com/OneStepAt4time)
+
 A free, open-source, Rust-powered [Model Context Protocol](https://modelcontextprotocol.io/) server for **Godot Engine 4**.
 
 > **Goal**: turn Kimi Code, Claude Code, Cursor, or any MCP-compatible assistant into a hands-on collaborator for building Godot games — giving it the same deep editor control that commercial solutions lock behind a paywall, but as a downloadable, self-hostable, MIT-licensed binary.
@@ -192,6 +195,30 @@ This lets the assistant react to errors and state changes as they happen, instea
 - [ ] Asset import and resource pipeline helpers
 - [ ] MCP resources / prompts for Godot documentation
 - [ ] Editor refactoring tools (extract node, rename symbol across project)
+
+## 💖 Support the Development
+
+Open Godot MCP is a community-driven, 100% free and open-source project. Keeping it up-to-date with new Godot releases and adding advanced editor features takes time and dedication. 
+
+If this tool has saved you time, improved your workflow, or wowed your game design process, please consider supporting its development:
+- ⭐ **Star this repository** on GitHub — it's free and helps others discover the project!
+- **[Sponsor via GitHub](https://github.com/sponsors/OneStepAt4time)** (Recurring or one-time)
+- **[Buy Me a Coffee](https://www.buymeacoffee.com/OneStepAt4time)** (Fast & direct support)
+
+Every bit of support helps keep this project free, fast, and open to everyone!
+
+## 🤝 Contributions, Feedback & Testing
+
+This project is **open for contributions**! Whether you are a veteran game developer, a rustacean, an AI researcher, or a hobbyist designer, you are highly welcome here.
+
+How you can help and get involved:
+- **Test the Server**: Download the plugin, run the server, and let us know how it works in your daily workflow.
+- **Report Bugs & Suggest Issues**: Encountered a glitch or a crash? Open an issue on GitHub to report bugs.
+- **Request Features**: Want support for new systems, C# script support, or custom asset importers? Open an issue or a discussion thread.
+- **Submit Pull Requests**: Want to add code? Look at open issues or submit PRs directly. Every improvement is appreciated!
+- **Ask Questions / Share Ideas**: Feel free to start discussions on anything, no matter how small. 
+
+Let's build the ultimate AI assistant bridge for Godot Engine together!
 
 ## License
 
