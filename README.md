@@ -183,10 +183,15 @@ This lets the assistant react to errors and state changes as they happen, instea
 - [x] 3D helpers (camera, environment, rendering settings)
 - [x] UI / audio / animation / resource tools
 - [x] AI assistant docs and examples
-- [ ] UndoRedo integration for all mutating scene operations
-- [ ] Material / shader / particle tools
-- [ ] Export helpers
-- [ ] Automated integration test harness
+- [x] UndoRedo integration for all mutating scene operations
+- [x] Material / shader / particle tools
+- [x] Export helpers
+- [x] Automated integration test harness
+- [ ] Plugin artifact packaging in CI
+- [ ] GitHub Release workflow with cross-platform binaries
+- [ ] Asset import and resource pipeline helpers
+- [ ] MCP resources / prompts for Godot documentation
+- [ ] Editor refactoring tools (extract node, rename symbol across project)
 
 ## License
 
