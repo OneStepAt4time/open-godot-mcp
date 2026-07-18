@@ -1246,28 +1246,19 @@ func _for_each_file(path: String, callback: Callable) -> void:
 
 
 func _undo() -> Dictionary:
-	var ev := InputEventKey.new()
-	ev.keycode = KEY_Z
-	ev.ctrl_pressed = true
-	ev.pressed = true
-	Input.parse_input_event(ev)
-	var release := ev.duplicate()
-	release.pressed = false
-	Input.parse_input_event(release)
-	return {"ok": true}
+	var undo_redo := EditorInterface.get_editor_undo_redo()
+	if not undo_redo.has_undo():
+		return {"ok": true, "performed": false, "note": "nothing to undo"}
+	undo_redo.undo()
+	return {"ok": true, "performed": true}
 
 
 func _redo() -> Dictionary:
-	var ev := InputEventKey.new()
-	ev.keycode = KEY_Z
-	ev.ctrl_pressed = true
-	ev.shift_pressed = true
-	ev.pressed = true
-	Input.parse_input_event(ev)
-	var release := ev.duplicate()
-	release.pressed = false
-	Input.parse_input_event(release)
-	return {"ok": true}
+	var undo_redo := EditorInterface.get_editor_undo_redo()
+	if not undo_redo.has_redo():
+		return {"ok": true, "performed": false, "note": "nothing to redo"}
+	undo_redo.redo()
+	return {"ok": true, "performed": true}
 
 
 func _set_control_anchors(params: Variant) -> Dictionary:

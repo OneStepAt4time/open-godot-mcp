@@ -3,6 +3,11 @@ extends Node
 
 const CommandRouter = preload("res://addons/open_godot_mcp/command_router.gd")
 
+# EditorInterface.set_plugin_enabled() identifies plugins by directory name.
+const PLUGIN_NAME := "open_godot_mcp"
+# Bind address for the WebSocket bridge: loopback only, never expose to the LAN.
+const BIND_ADDRESS := "127.0.0.1"
+
 var _tcp_server: TCPServer
 var _peers: Dictionary # peer_id -> WebSocketPeer
 var _router: CommandRouter
@@ -15,11 +20,11 @@ func _ready() -> void:
 
 func start(port: int) -> void:
 	_tcp_server = TCPServer.new()
-	var err := _tcp_server.listen(port)
+	var err := _tcp_server.listen(port, BIND_ADDRESS)
 	if err != OK:
 		push_error("OpenGodotMCP: failed to listen on port %d (err %d)" % [port, err])
 		return
-	print("OpenGodotMCP: listening on port ", port)
+	print("OpenGodotMCP: listening on %s:%d" % [BIND_ADDRESS, port])
 
 
 func stop() -> void:
@@ -93,12 +98,11 @@ func _send(peer: WebSocketPeer, data: Dictionary) -> void:
 
 
 func _reload_plugin() -> Dictionary:
-	var plugin_cfg := "res://addons/open_godot_mcp/plugin.cfg"
 	# Schedule the actual reload after this response has been flushed.
-	call_deferred("_do_plugin_reload", plugin_cfg)
-	return {"ok": true, "reloaded": plugin_cfg, "note": "MCP server will reconnect automatically"}
+	call_deferred("_do_plugin_reload")
+	return {"ok": true, "reloaded": PLUGIN_NAME, "note": "MCP server will reconnect automatically"}
 
 
-func _do_plugin_reload(plugin_cfg: String) -> void:
-	EditorInterface.set_plugin_enabled(plugin_cfg, false)
-	EditorInterface.set_plugin_enabled(plugin_cfg, true)
+func _do_plugin_reload() -> void:
+	EditorInterface.set_plugin_enabled(PLUGIN_NAME, false)
+	EditorInterface.set_plugin_enabled(PLUGIN_NAME, true)

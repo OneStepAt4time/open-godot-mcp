@@ -78,14 +78,23 @@ struct GodotEvent {
     payload: Option<Value>,
 }
 
-type PendingMap = Arc<Mutex<HashMap<String, oneshot::Sender<Value>>>>;
+/// Outcome of a request to the Godot plugin. The plugin reports tool failures
+/// as {"error": "..."} payloads inside `result`; `is_error` surfaces them so
+/// they can be mapped to MCP tool errors instead of fake successes.
+#[derive(Debug)]
+struct GodotReply {
+    result: Value,
+    is_error: bool,
+}
+
+type PendingMap = Arc<Mutex<HashMap<String, oneshot::Sender<GodotReply>>>>;
 
 async fn send_godot_request(
     pending: &PendingMap,
     out_tx: &mpsc::UnboundedSender<String>,
     method: &str,
     params: Option<Value>,
-) -> Result<Value> {
+) -> Result<GodotReply> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let godot_req = GodotRequest {
         request_id: request_id.clone(),
@@ -95,7 +104,7 @@ async fn send_godot_request(
     let payload = serde_json::to_string(&godot_req)
         .with_context(|| format!("failed to serialize {} request", method))?;
 
-    let (tx, rx) = oneshot::channel::<Value>();
+    let (tx, rx) = oneshot::channel::<GodotReply>();
     pending.lock().await.insert(request_id.clone(), tx);
 
     out_tx
@@ -103,7 +112,7 @@ async fn send_godot_request(
         .map_err(|_| anyhow::anyhow!("websocket sender closed"))?;
 
     match tokio::time::timeout(Duration::from_secs(10), rx).await {
-        Ok(Ok(value)) => Ok(value),
+        Ok(Ok(reply)) => Ok(reply),
         Ok(Err(_)) => Err(anyhow::anyhow!("response channel dropped")),
         Err(_) => {
             pending.lock().await.remove(&request_id);
@@ -171,10 +180,24 @@ async fn run_once(args: &Args) -> Result<RunResult> {
                 if let Ok(resp) = serde_json::from_str::<GodotResponse>(&text) {
                     let mut map = pending_for_reader.lock().await;
                     if let Some(tx) = map.remove(&resp.request_id) {
-                        let value = resp.result.unwrap_or_else(|| {
-                            Value::String(resp.error.unwrap_or_else(|| "unknown error".into()))
-                        });
-                        let _ = tx.send(value);
+                        let reply = match (resp.result, resp.error) {
+                            (Some(result), _) => {
+                                // The Godot plugin signals tool failures as
+                                // {"error": "..."} inside the result payload.
+                                let is_error =
+                                    result.get("error").and_then(|e| e.as_str()).is_some();
+                                GodotReply { result, is_error }
+                            }
+                            (None, Some(err)) => GodotReply {
+                                result: Value::String(err),
+                                is_error: true,
+                            },
+                            (None, None) => GodotReply {
+                                result: Value::Null,
+                                is_error: false,
+                            },
+                        };
+                        let _ = tx.send(reply);
                     }
                 } else if let Ok(evt) = serde_json::from_str::<GodotEvent>(&text) {
                     if let Err(e) = forward_event(evt).await {
@@ -203,6 +226,7 @@ async fn run_once(args: &Args) -> Result<RunResult> {
     } else {
         match send_godot_request(&pending, &out_tx, "get_project_info", None).await {
             Ok(info) => info
+                .result
                 .get("log_path")
                 .and_then(|v| v.as_str())
                 .map(String::from),
@@ -212,12 +236,15 @@ async fn run_once(args: &Args) -> Result<RunResult> {
             }
         }
     };
-    if let Some(path) = log_path {
-        if !path.is_empty() {
+    // The tailer runs until it is aborted on exit; without the abort, every
+    // reconnection would stack one more duplicate log tailer.
+    let tailer = match log_path {
+        Some(path) if !path.is_empty() => {
             eprintln!("[open-godot-mcp] tailing log file: {}", path);
-            tokio::spawn(tail_log_file(path));
+            Some(tokio::spawn(tail_log_file(path)))
         }
-    }
+        _ => None,
+    };
 
     // Stdin reader loop.
     let stdin = tokio::io::stdin();
@@ -250,14 +277,21 @@ async fn run_once(args: &Args) -> Result<RunResult> {
             }
         };
 
-        let response = handle_request(req, &pending, &out_tx).await;
-        send_response(&mut stdout, response).await?;
+        if let Some(response) = handle_request(req, &pending, &out_tx).await {
+            send_response(&mut stdout, response).await?;
+        }
 
         if disconnected.load(Ordering::SeqCst) {
+            if let Some(handle) = &tailer {
+                handle.abort();
+            }
             return Ok(RunResult::Disconnected);
         }
     }
 
+    if let Some(handle) = &tailer {
+        handle.abort();
+    }
     Ok(RunResult::StdinClosed)
 }
 
@@ -265,7 +299,12 @@ async fn handle_request(
     req: JsonRpcRequest,
     pending: &PendingMap,
     out_tx: &mpsc::UnboundedSender<String>,
-) -> JsonRpcResponse {
+) -> Option<JsonRpcResponse> {
+    // JSON-RPC notifications (messages without an id) must never be answered.
+    if req.id.is_none() {
+        return None;
+    }
+
     let base = JsonRpcResponse {
         jsonrpc: "2.0".into(),
         id: req.id.clone(),
@@ -274,7 +313,7 @@ async fn handle_request(
     };
 
     match req.method.as_str() {
-        "initialize" => JsonRpcResponse {
+        "initialize" => Some(JsonRpcResponse {
             result: Some(json!({
                 "protocolVersion": "2024-11-05",
                 "capabilities": {
@@ -286,12 +325,12 @@ async fn handle_request(
                 }
             })),
             ..base
-        },
-        "notifications/initialized" => JsonRpcResponse {
-            result: Some(Value::Null),
+        }),
+        "ping" => Some(JsonRpcResponse {
+            result: Some(json!({})),
             ..base
-        },
-        "tools/list" => JsonRpcResponse {
+        }),
+        "tools/list" => Some(JsonRpcResponse {
             result: Some(json!({
                 "tools": [
                     {
@@ -1189,7 +1228,7 @@ async fn handle_request(
                 ]
             })),
             ..base
-        },
+        }),
         "tools/call" => {
             let params = req.params.as_ref().cloned().unwrap_or(Value::Null);
             let name = params.get("name").and_then(|v| v.as_str()).unwrap_or("");
@@ -1205,65 +1244,77 @@ async fn handle_request(
             let payload = match serde_json::to_string(&godot_req) {
                 Ok(s) => s,
                 Err(e) => {
-                    return JsonRpcResponse {
+                    return Some(JsonRpcResponse {
                         error: Some(JsonRpcError {
                             code: -32603,
                             message: format!("internal error: {}", e),
                             data: None,
                         }),
                         ..base
-                    };
+                    });
                 }
             };
 
-            let (tx, rx) = oneshot::channel::<Value>();
+            let (tx, rx) = oneshot::channel::<GodotReply>();
             pending.lock().await.insert(request_id, tx);
 
             if out_tx.send(payload).is_err() {
-                return JsonRpcResponse {
+                pending.lock().await.remove(&godot_req.request_id);
+                return Some(JsonRpcResponse {
                     error: Some(JsonRpcError {
                         code: -32603,
                         message: "websocket sender closed".into(),
                         data: None,
                     }),
                     ..base
-                };
+                });
             }
 
-            match tokio::time::timeout(tokio::time::Duration::from_secs(30), rx).await {
-                Ok(Ok(value)) => JsonRpcResponse {
-                    result: Some(json!({ "content": [{ "type": "text", "text": value.to_string() }] })),
-                    ..base
-                },
-                Ok(Err(_)) => JsonRpcResponse {
+            // Most calls answer in milliseconds; a headless project export can
+            // take several minutes, so it gets a dedicated timeout.
+            let timeout_secs = if name == "run_project_export" { 600 } else { 60 };
+            match tokio::time::timeout(tokio::time::Duration::from_secs(timeout_secs), rx).await {
+                Ok(Ok(reply)) => {
+                    let mut tool_result = json!({
+                        "content": [{ "type": "text", "text": reply.result.to_string() }]
+                    });
+                    if reply.is_error {
+                        tool_result["isError"] = Value::Bool(true);
+                    }
+                    Some(JsonRpcResponse {
+                        result: Some(tool_result),
+                        ..base
+                    })
+                }
+                Ok(Err(_)) => Some(JsonRpcResponse {
                     error: Some(JsonRpcError {
                         code: -32603,
                         message: "response channel dropped".into(),
                         data: None,
                     }),
                     ..base
-                },
+                }),
                 Err(_) => {
                     pending.lock().await.remove(&godot_req.request_id);
-                    JsonRpcResponse {
+                    Some(JsonRpcResponse {
                         error: Some(JsonRpcError {
                             code: -32603,
                             message: "timeout waiting for Godot".into(),
                             data: None,
                         }),
                         ..base
-                    }
+                    })
                 }
             }
         }
-        _ => JsonRpcResponse {
+        _ => Some(JsonRpcResponse {
             error: Some(JsonRpcError {
                 code: -32601,
                 message: format!("method not found: {}", req.method),
                 data: None,
             }),
             ..base
-        },
+        }),
     }
 }
 
