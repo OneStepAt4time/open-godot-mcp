@@ -32,7 +32,7 @@ Provide a free, open-source MCP server that lets AI assistants inspect and contr
 
 - [x] TileMap tools (painting cells, reading used cells, inspecting layers).
 - [x] Spatial raycasting and overlap queries (Area2D/3D inspection).
-- [x] Automated test scenarios and assertions.
+- [ ] Automated test scenarios and assertions (currently manual smoke tests via `test_project/`).
 - [x] Navigation baking (2D/3D NavigationRegion baking).
 - [x] Performance profiling monitors (FPS, draw calls, memory, active bodies).
 
@@ -63,7 +63,7 @@ Responses carry the same `request_id` plus either `result` or `error`.
 - Tool names use `snake_case`.
 - Arguments are declared as JSON Schema inside `tools/list`.
 - Results are returned as MCP `text` content; complex data is JSON-stringified.
-- Godot-side operations currently mutate scenes directly; future work will route changes through `EditorUndoRedoManager`.
+- All mutating scene operations are routed through Godot's `EditorUndoRedoManager`, so AI edits are fully undoable in the editor.
 
 ## 3. Implementation phases
 
@@ -117,7 +117,7 @@ Tools: `list_animations`, `play_animation`, `list_audio_streams`, `play_audio_pr
 - [x] README and PLAN refresh.
 - [x] Integration test project.
 - [x] UndoRedo integration for all mutating scene operations.
-- [x] Automated integration test harness (implemented via Python smoke test scripts).
+- [x] Manual integration test project (`test_project/`). An automated test harness is on the roadmap.
 - [x] Plugin artifact packaging in CI.
 - [x] GitHub Release workflow.
 
@@ -145,10 +145,8 @@ Current status: manual end-to-end smoke tests pass for all implemented tools.
 
 ## 5. Release strategy
 
-- GitHub Actions builds release binaries for `x86_64-pc-windows-msvc`, `x86_64-unknown-linux-gnu`, `x86_64-apple-darwin`, `aarch64-apple-darwin`.
-- CI also packages `addons/open_godot_mcp/` as a zip artifact.
-- GitHub Release contains:
-  - platform binaries;
-  - `open-godot-mcp-plugin.zip`;
-  - `PLAN.md`, `README.md`, `PROTOCOL.md`.
+- Releases are published by pushing a git tag `vX.Y.Z` (e.g. `git tag -a v0.1.2 -m "v0.1.2" && git push origin v0.1.2`). The tag name must match `[workspace.package] version` in `Cargo.toml` and the `version` fields in both `plugin.cfg` files — CI enforces this.
+- GitHub Actions builds release binaries for `x86_64-pc-windows-msvc`, `x86_64-unknown-linux-gnu`, `x86_64-apple-darwin`, `aarch64-apple-darwin` and packages `godot_plugin/addons/open_godot_mcp/` as `open-godot-mcp-plugin.zip`.
+- The GitHub Release is created automatically with generated release notes.
+- The canonical plugin lives in `godot_plugin/`; the copy in `test_project/addons/` must be kept in sync with it.
 - Versioning follows SemVer starting at `0.1.0`.

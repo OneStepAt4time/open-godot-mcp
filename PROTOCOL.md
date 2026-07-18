@@ -4,7 +4,7 @@ This document defines the messages exchanged between the Rust MCP server and the
 
 ## Connection
 
-- The plugin starts a WebSocket server on `ws://127.0.0.1:6505/mcp` (port configurable).
+- The plugin starts a WebSocket server on `ws://127.0.0.1:6505/mcp`, bound to loopback only. The port is currently fixed at 6505 on the plugin side; the Rust server can target a different port via `--godot-port` (useful with customized plugin builds).
 - The Rust server connects to that endpoint as a client.
 - The channel is plain-text JSON, one message per WebSocket text frame.
 
@@ -31,7 +31,7 @@ This document defines the messages exchanged between the Rust MCP server and the
 }
 ```
 
-or, on error:
+or, on a transport-level failure (e.g. an unparseable request):
 
 ```json
 {
@@ -39,6 +39,17 @@ or, on error:
   "error": "human readable error message"
 }
 ```
+
+Tool-level failures are reported **inside** the result payload, following the plugin's convention:
+
+```json
+{
+  "request_id": "<uuid>",
+  "result": { "error": "node not found: Player/Sprite" }
+}
+```
+
+The Rust server detects this shape and surfaces it to the MCP client as a tool error (`isError: true`) instead of a fake success.
 
 ## Methods
 

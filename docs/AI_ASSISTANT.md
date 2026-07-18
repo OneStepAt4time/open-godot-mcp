@@ -1,8 +1,8 @@
 # Open Godot MCP — AI Assistant for Godot Development
 
-Open Godot MCP turns Kimi Code, Claude Code, Cursor, or any MCP-compatible assistant into a hands-on collaborator for Godot Engine 4 game development.
+Open Godot MCP turns Kimi Code, Claude Code, Cursor, or any MCP-compatible assistant into a hands-on collaborator for Godot Engine 4.3+ game development.
 
-Instead of just reading code, the assistant can inspect the running Godot Editor, modify scenes, create scripts, test gameplay, and capture screenshots — all through a safe, local, open-source bridge.
+Instead of just reading code, the assistant can inspect the running Godot Editor, modify scenes, create scripts, test gameplay, and capture screenshots — all through an open-source bridge bound to localhost.
 
 ## What the AI assistant can do
 
@@ -37,7 +37,7 @@ With the plugin active and the Rust server connected, an AI assistant can:
    ```
    Then enable **Open Godot MCP** in `Project Settings → Plugins`.
 
-3. Configure your assistant. Add to your `.mcp.json`:
+3. Configure your assistant. Add to your MCP configuration file (`.mcp.json` for Claude Code, `.kimi-code/mcp.json` for Kimi Code, `~/.cursor/mcp.json` for Cursor):
    ```json
    {
      "mcpServers": {
@@ -50,7 +50,7 @@ With the plugin active and the Rust server connected, an AI assistant can:
 
 4. Open Godot Editor. The plugin logs:
    ```
-   OpenGodotMCP: listening on port 6505
+   OpenGodotMCP: listening on 127.0.0.1:6505
    ```
 
 5. Start a new Kimi / Claude session. The server connects automatically and the assistant receives the full tool list.
@@ -102,9 +102,10 @@ With the plugin active and the Rust server connected, an AI assistant can:
 
 ## Safety & limitations
 
-- The assistant operates inside your local Godot Editor. It cannot access the internet or modify files outside the project.
+- The bridge listens on **localhost only** (`127.0.0.1:6505`) and accepts no remote connections. Only connect AI clients you trust.
+- **The assistant has the same powers as the editor.** Tools like `create_script`/`edit_script` write files in the project, and `execute_editor_script` runs arbitrary GDScript in the editor context — which can access the filesystem, network, and OS commands. Treat every AI session like a junior developer with full editor access: review destructive operations before approving them.
 - **Full Undo/Redo**: All mutating scene operations (adding, deleting, duplicating, moving, renaming, updating properties, and changing signals/groups/scripts) go through Godot's `EditorUndoRedoManager`. You can safely undo (`Ctrl+Z`) or redo (`Ctrl+Y`) any modifications made by the AI directly inside the editor.
-- **Active Log Interception**: Editor warnings and errors are actively monitored by the server and broadcasted as asynchronous MCP notifications (`notifications/message`), making script error debugging highly automated.
+- **Active Log Interception**: Editor warnings and errors are actively monitored by the server and broadcast as asynchronous MCP notifications (`notifications/message`), making script error debugging highly automated.
 - `get_game_screenshot` and full runtime scene inspection are limited because the running game is usually a separate process.
 
 ## Next steps

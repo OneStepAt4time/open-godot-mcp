@@ -4,9 +4,9 @@ This document shows a complete, copy-pasteable session that creates a small play
 
 ## Prerequisites
 
-- Godot Editor 4.x is open with the Open Godot MCP plugin enabled.
+- Godot Editor 4.3+ is open with the Open Godot MCP plugin enabled.
 - The Rust server `open-godot-mcp-server` is running and connected.
-- You are in the project root `D:/godot-mcp-server/test_project/` or your own Godot project.
+- You are in the `test_project/` directory of this repository or your own Godot project.
 
 ## Goal
 

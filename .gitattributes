@@ -1,0 +1,4 @@
+# GitHub language stats: the test project is a fixture, not project source.
+test_project/** linguist-vendored
+*.uid linguist-generated
+Cargo.lock linguist-generated
