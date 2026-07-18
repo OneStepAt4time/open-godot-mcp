@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The server no longer replies to JSON-RPC notifications; protocol-level `ping` is now implemented.
 - Duplicate log tailers accumulated after each reconnection.
 - A pending-request entry leaked when the WebSocket sender was closed.
+- `undo`/`redo` no-oped: `EditorUndoRedoManager` has no `undo()`/`has_undo()` methods — they now drive the per-scene `UndoRedo` history via `get_history_undo_redo()` (verified end-to-end in a live editor).
+- Large payloads (`get_editor_screenshot`, deep scene trees) died on the default WebSocket outbound buffer; it is now 16 MiB.
+- `execute_editor_script` and `attach_script` served stale scripts from the resource cache; both now load with `CACHE_MODE_IGNORE` and the inline-script temp file is cleaned up.
+- Docs: animated 3D demo GIF in the README; `reload_plugin` description and docs now state it does not re-parse GDScript.
 
 ## [0.1.1] - 2026-07-12
 

@@ -13,6 +13,10 @@ With Open Godot MCP, an AI assistant can inspect scenes, create and edit nodes, 
 
 The assistant also receives **proactive events** from Godot: editor errors, log output, scene changes, and play/stop state changes are pushed to the MCP client as notifications, so the AI notices problems without being asked.
 
+![Open Godot MCP in action: an AI assistant builds and animates a 3D robot scene live in the Godot editor, then undo/redo reverts the changes](docs/media/open-godot-mcp-demo.gif)
+
+*An AI assistant driving the Godot editor through MCP: building a 3D scene piece by piece, lighting it, attaching an idle-animation script — then undo/redo reverts and restores the changes live.*
+
 **Contents**: [Why Open Godot MCP](#why-open-godot-mcp) · [How it compares](#how-it-compares) · [Quick start](#quick-start) · [Architecture](#architecture) · [Tools (84)](#available-mcp-tools--capabilities) · [Troubleshooting](#troubleshooting) · [Roadmap](#roadmap) · [Support](#-support-the-development) · [Contributing](#-contributions-feedback--testing)
 
 ## Why Open Godot MCP?
