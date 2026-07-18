@@ -51,6 +51,9 @@ func _process(_delta: float) -> void:
 	while _tcp_server.is_connection_available():
 		var conn := _tcp_server.take_connection()
 		var peer := WebSocketPeer.new()
+		# Some payloads are large (screenshots, deep scene trees): raise the
+		# outbound buffer well above the default to avoid send failures.
+		peer.outbound_buffer_size = 16 * 1024 * 1024
 		var err := peer.accept_stream(conn)
 		if err != OK:
 			push_error("OpenGodotMCP: WebSocket accept failed: ", err)

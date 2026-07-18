@@ -796,7 +796,9 @@ func _attach_script(params: Variant) -> Dictionary:
 	var node := _get_node(node_path)
 	if node == null:
 		return {"error": "node not found: " + node_path}
-	var script := load(script_path) as Script
+	# CACHE_MODE_IGNORE: a script rewritten via create_script/edit_script must be
+	# re-parsed from disk, not served stale from the resource cache.
+	var script := ResourceLoader.load(script_path, "", ResourceLoader.CACHE_MODE_IGNORE) as Script
 	if script == null:
 		return {"error": "cannot load script: " + script_path}
 	var old_script = node.get_script()
@@ -868,15 +870,19 @@ func _execute_editor_script(params: Variant) -> Dictionary:
 		return {"error": "missing path or content"}
 
 	var script_path := path
+	var is_temp := false
 	if not content.is_empty():
 		script_path = "user://__open_godot_mcp_exec_tmp.gd"
+		is_temp = true
 		var file := FileAccess.open(script_path, FileAccess.WRITE)
 		if file == null:
 			return {"error": "cannot write temp script: " + str(FileAccess.get_open_error())}
 		file.store_string(content)
 		file.close()
 
-	var script := load(script_path) as Script
+	# CACHE_MODE_IGNORE: the temp path is reused for every inline script, so a
+	# cached load would re-run the previous script instead of the current one.
+	var script := ResourceLoader.load(script_path, "", ResourceLoader.CACHE_MODE_IGNORE) as Script
 	if script == null:
 		return {"error": "cannot load script: " + script_path}
 	var instance = script.new()
@@ -885,6 +891,8 @@ func _execute_editor_script(params: Variant) -> Dictionary:
 	if not instance.has_method("_run"):
 		return {"error": "script does not define _run()"}
 	instance._run()
+	if is_temp:
+		DirAccess.remove_absolute(script_path)
 	return {"ok": true, "path": script_path}
 
 
@@ -1245,19 +1253,33 @@ func _for_each_file(path: String, callback: Callable) -> void:
 	dir.list_dir_end()
 
 
+# EditorUndoRedoManager only manages histories; undo/redo live on the per-scene
+# UndoRedo object, reachable via the history id of the edited scene root.
+func _get_scene_undo_redo() -> UndoRedo:
+	var root := EditorInterface.get_edited_scene_root()
+	if root == null:
+		return null
+	var manager := EditorInterface.get_editor_undo_redo()
+	return manager.get_history_undo_redo(manager.get_object_history_id(root))
+
+
 func _undo() -> Dictionary:
-	var undo_redo := EditorInterface.get_editor_undo_redo()
-	if not undo_redo.has_undo():
+	var history := _get_scene_undo_redo()
+	if history == null:
+		return {"error": "no scene is being edited"}
+	if not history.has_undo():
 		return {"ok": true, "performed": false, "note": "nothing to undo"}
-	undo_redo.undo()
+	history.undo()
 	return {"ok": true, "performed": true}
 
 
 func _redo() -> Dictionary:
-	var undo_redo := EditorInterface.get_editor_undo_redo()
-	if not undo_redo.has_redo():
+	var history := _get_scene_undo_redo()
+	if history == null:
+		return {"error": "no scene is being edited"}
+	if not history.has_redo():
 		return {"ok": true, "performed": false, "note": "nothing to redo"}
-	undo_redo.redo()
+	history.redo()
 	return {"ok": true, "performed": true}
 
 

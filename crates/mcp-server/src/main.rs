@@ -1217,7 +1217,7 @@ async fn handle_request(
                     },
                     {
                         "name": "reload_plugin",
-                        "description": "Reload the Open Godot MCP plugin in the editor to pick up script changes.",
+                        "description": "Restart the Open Godot MCP plugin bridge (WebSocket) and reconnect. Does not re-parse GDScript: restart the editor to pick up plugin code changes.",
                         "inputSchema": {"type": "object", "properties": {}}
                     },
                     {
