@@ -1,6 +1,5 @@
 # Rust
 /target/
-/Cargo.lock
 /dist/
 
 # Godot
@@ -8,6 +7,9 @@
 *.import
 test_project/godot.log
 test_project/godot.pid
+
+# Secrets
+.env*
 
 # IDE
 .vscode/
