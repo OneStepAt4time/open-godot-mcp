@@ -57,6 +57,10 @@ const BACK_OVERSHOOT := 1.9      # ease-out-back constant -> ~12% overshoot
 const DIP_MAX := 0.06            # soft cap for the below-rest landing dip (m)
 
 const WAKE_DURATION := 2.0
+
+# Scripted arc for the rendered trailer (game mode has no MCP cascade):
+# after the first idle stretch, replay the full assembly once.
+const REPLAY_AT := 42.0
 const WAKE_YAW_AMP := 0.4        # rad, head yaw right->left
 const WAKE_BLINK_AT := 0.9       # seconds into wake
 
@@ -167,6 +171,9 @@ var _hop_count := 0
 # Camera keyframes, filled in _cache() (see the end of _cache).
 var _cam_keys: Array = []
 
+# Trailer arc: true after the one scripted assembly replay has fired.
+var _replayed := false
+
 # Per-frame offset accumulators: the idle state composes motions additively.
 var _pos_off := {}             # Node3D -> Vector3
 var _rot_off := {}             # Node3D -> Vector3
@@ -202,6 +209,12 @@ func _process(delta: float) -> void:
 			_anim_idle()
 		STATE_FROZEN:
 			_apply_freeze_hold()
+
+	# Scripted trailer arc: replay the full assembly once after the first idle
+	# stretch (in game mode there is no MCP undo/redo cascade to mimic it).
+	if not _replayed and _state == STATE_IDLE and _time >= REPLAY_AT:
+		_replayed = true
+		_enter_state(STATE_ASSEMBLY)
 
 	# While unfreezing, glide from the rest pose back into the animated pose.
 	if _freeze_blend > 0.0 and _state != STATE_FROZEN:
@@ -348,10 +361,15 @@ func _cache() -> void:
 		   "OK" if _antenna_mat != null else "missing",
 		   "OK" if _chest_mat != null else "missing"])
 
-	# Camera choreography (drives the EDITOR viewport camera). Intentionally
-	# EMPTY in the shipped demo scene: it must never hijack the user's editor
-	# camera. The keyframes used for the README GIF are in the project history.
-	_cam_keys = []
+	# Camera choreography (drives the EDITOR viewport camera, so the recording
+	# stays framed no matter how slowly MCP commands trickle in).
+	# [show_time, position, look_at] — show_time is the scaled _time clock.
+	_cam_keys = [
+		[0.0, Vector3(1.2, 3.3, 5.9), Vector3(0, 2.8, 0)],
+		[8.0, Vector3(0.5, 3.0, 1.9), Vector3(0, 2.9, 0.15)],
+		[14.5, Vector3(-1.4, 3.3, 5.7), Vector3(0, 2.85, 0)],
+		[21.0, Vector3(1.6, 1.5, 6.2), Vector3(0, 3.0, 0)],
+	]
 
 
 # Safe node lookup: never errors on missing or freed nodes.
@@ -382,10 +400,13 @@ func _camera_target(t: float) -> Array:
 func _anim_camera(delta: float) -> void:
 	if _cam_keys.is_empty():
 		return
-	var vp = EditorInterface.get_editor_viewport_3d()
-	if vp == null or vp.get_camera_3d() == null:
+	# Never hijack the user's editor camera; the choreography only drives the
+	# in-game MainCamera (used for the README trailer via Movie Maker mode).
+	if Engine.is_editor_hint():
 		return
-	var cam = vp.get_camera_3d()
+	var cam := get_node_or_null("MainCamera") as Camera3D
+	if cam == null:
+		return
 	var target = _camera_target(_time)
 	cam.global_position = cam.global_position.lerp(target[0], 1.0 - exp(-2.5 * delta))
 	cam.look_at(target[1], Vector3.UP)
